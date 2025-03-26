@@ -28,6 +28,16 @@ class _JobFormState extends State<JobForm> {
   List<File> _selectedImages = [];
   List<String> _existingImages = [];
 
+  String? _selectedCategory;
+  final List<String> _categories = [
+    'Plumbing',
+    'Electrical',
+    'Cleaning',
+    'Painting',
+    'Gardening',
+    'Other',
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -38,6 +48,7 @@ class _JobFormState extends State<JobForm> {
       _startTime = widget.initialData!.dailyTimeRange.start;
       _endTime = widget.initialData!.dailyTimeRange.end;
       _existingImages = List.from(widget.initialData!.imageUrls);
+      _selectedCategory = widget.initialData!.category;
     }
   }
 
@@ -102,7 +113,17 @@ class _JobFormState extends State<JobForm> {
   }
 
   Future<void> _saveJob() async {
-    if (!_formKey.currentState!.validate() || _jobDateRange == null || _startTime == null || _endTime == null) return;
+    if (!_formKey.currentState!.validate() ||
+        _jobDateRange == null ||
+        _startTime == null ||
+        _endTime == null ||
+        _selectedCategory == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please fill all fields")),
+      );
+      return;
+    }
+
     _formKey.currentState!.save();
 
     final timeRange = TimeOfDayRange(start: _startTime!, end: _endTime!);
@@ -114,12 +135,12 @@ class _JobFormState extends State<JobForm> {
       jobDateRange: _jobDateRange!,
       dailyTimeRange: timeRange,
       imageUrls: _existingImages,
+      category: _selectedCategory!,
     );
 
     if (_selectedImages.isNotEmpty) {
       final jobId = job.id ?? DateTime.now().millisecondsSinceEpoch.toString();
       final uploadedUrls = await StorageService().uploadJobImages(_selectedImages, jobId);
-
       job.imageUrls.addAll(uploadedUrls);
     }
 
@@ -158,6 +179,22 @@ class _JobFormState extends State<JobForm> {
                     : null,
               ),
               const SizedBox(height: 12.0),
+
+              // Category dropdown
+              DropdownButtonFormField<String>(
+                value: _selectedCategory,
+                decoration: const InputDecoration(
+                  labelText: 'Job Category',
+                  border: OutlineInputBorder(),
+                ),
+                items: _categories
+                    .map((cat) => DropdownMenuItem(value: cat, child: Text(cat)))
+                    .toList(),
+                onChanged: (value) => setState(() => _selectedCategory = value),
+                validator: (value) => value == null ? 'Please select a category' : null,
+              ),
+              const SizedBox(height: 12.0),
+
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -204,25 +241,25 @@ class _JobFormState extends State<JobForm> {
                 height: 150,
                 child: totalImages > 0
                     ? ListView(
-                        scrollDirection: Axis.horizontal,
-                        children: [
-                          ..._existingImages.asMap().entries.map((entry) {
-                            int index = entry.key;
-                            String imageUrl = entry.value;
-                            return _buildImageWithDelete(imageUrl, index, isExisting: true);
-                          }),
-                          ..._selectedImages.asMap().entries.map((entry) {
-                            int index = entry.key;
-                            File imageFile = entry.value;
-                            return _buildImageWithDelete(imageFile, index, isExisting: false);
-                          }),
-                        ],
-                      )
+                  scrollDirection: Axis.horizontal,
+                  children: [
+                    ..._existingImages.asMap().entries.map((entry) {
+                      int index = entry.key;
+                      String imageUrl = entry.value;
+                      return _buildImageWithDelete(imageUrl, index, isExisting: true);
+                    }),
+                    ..._selectedImages.asMap().entries.map((entry) {
+                      int index = entry.key;
+                      File imageFile = entry.value;
+                      return _buildImageWithDelete(imageFile, index, isExisting: false);
+                    }),
+                  ],
+                )
                     : Container(
-                        height: 150,
-                        color: Colors.grey[300],
-                        child: const Center(child: Icon(Icons.camera_alt, size: 40)),
-                      ),
+                  height: 150,
+                  color: Colors.grey[300],
+                  child: const Center(child: Icon(Icons.camera_alt, size: 40)),
+                ),
               ),
               const SizedBox(height: 8.0),
               ElevatedButton.icon(
