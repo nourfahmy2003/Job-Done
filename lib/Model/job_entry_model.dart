@@ -12,9 +12,10 @@ class Job {
   final String? id;
   final String desc;
   final int price;
-  final DateTimeRange jobDateRange;     // The overall date range the job should happen in
-  final TimeOfDayRange dailyTimeRange;  // The time range user is available *each day*
+  final DateTimeRange jobDateRange;
+  final TimeOfDayRange dailyTimeRange;
   final List<String> imageUrls;
+  final String category;
 
   Job({
     this.id,
@@ -23,27 +24,28 @@ class Job {
     required this.jobDateRange,
     required this.dailyTimeRange,
     required this.imageUrls,
+    required this.category,
   });
 
   Map<String, dynamic> toMap() {
-  return {
-    'desc': desc,
-    'price': price,
-    'jobDateRange': {
-      'start': Timestamp.fromDate(jobDateRange.start),
-      'end': Timestamp.fromDate(jobDateRange.end),
-    },
-    'dailyTimeRange': {
-      'startHour': dailyTimeRange.start.hour,
-      'startMinute': dailyTimeRange.start.minute,
-      'endHour': dailyTimeRange.end.hour,
-      'endMinute': dailyTimeRange.end.minute,
-    },
-    'imageUrls': imageUrls,
-    'assignedFixerId': null, 
-  };
-}
-
+    return {
+      'desc': desc,
+      'price': price,
+      'category': category,
+      'jobDateRange': {
+        'start': Timestamp.fromDate(jobDateRange.start),
+        'end': Timestamp.fromDate(jobDateRange.end),
+      },
+      'dailyTimeRange': {
+        'startHour': dailyTimeRange.start.hour,
+        'startMinute': dailyTimeRange.start.minute,
+        'endHour': dailyTimeRange.end.hour,
+        'endMinute': dailyTimeRange.end.minute,
+      },
+      'imageUrls': imageUrls,
+      'assignedFixerId': null,
+    };
+  }
 
   Job copyWith({
     String? desc,
@@ -51,6 +53,7 @@ class Job {
     DateTimeRange? jobDateRange,
     TimeOfDayRange? dailyTimeRange,
     List<String>? imageUrls,
+    String? category,
   }) {
     return Job(
       id: this.id,
@@ -59,6 +62,7 @@ class Job {
       jobDateRange: jobDateRange ?? this.jobDateRange,
       dailyTimeRange: dailyTimeRange ?? this.dailyTimeRange,
       imageUrls: imageUrls ?? this.imageUrls,
+      category: category ?? this.category,
     );
   }
 
@@ -72,6 +76,7 @@ class Job {
       id: doc.id,
       desc: map['desc'] ?? '',
       price: map['price'] ?? 0,
+      category: map['category'] ?? 'Other',
       jobDateRange: DateTimeRange(
         start: (dateRangeMap['start'] as Timestamp).toDate(),
         end: (dateRangeMap['end'] as Timestamp).toDate(),
@@ -86,7 +91,10 @@ class Job {
           minute: timeRangeMap['endMinute'],
         ),
       ),
-      imageUrls: (map['imageUrls'] as List<dynamic>?)?.map((item) => item.toString()).toList() ?? [],
+      imageUrls: (map['imageUrls'] as List<dynamic>?)
+          ?.map((item) => item.toString())
+          .toList() ??
+          [],
     );
   }
 }
