@@ -54,25 +54,26 @@ class FixerJobListView extends StatelessWidget {
           }
 
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(child: Text("🎉 No unassigned jobs available."));
+            return const Center(
+                child: Text("🎉 No unassigned jobs available."));
           }
 
           try {
-            final jobs = snapshot.data!.docs
-                .map((doc) => Job.fromMap(doc))
-                .toList();
+            final jobs =
+                snapshot.data!.docs.map((doc) => Job.fromMap(doc)).toList();
 
             return ListView.builder(
               itemCount: jobs.length,
               itemBuilder: (context, index) {
                 final job = jobs[index];
                 return Card(
-                  margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  margin:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   child: ListTile(
                     title: Text(job.desc),
                     subtitle: Text(
                       "From ${job.jobDateRange.start.toLocal().toString().split(' ')[0]} "
-                          "to ${job.jobDateRange.end.toLocal().toString().split(' ')[0]}",
+                      "to ${job.jobDateRange.end.toLocal().toString().split(' ')[0]}",
                     ),
                     trailing: Text("\$${job.price}"),
                   ),

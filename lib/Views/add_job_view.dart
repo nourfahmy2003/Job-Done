@@ -1,7 +1,7 @@
-// Updated version of your JobForm to work with the new Job model and JobService
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import '../Model/job_entry_model.dart';
 import '../Controller/job_entry_service.dart';
 import '../Controller/storage_service.dart';
@@ -52,6 +52,400 @@ class _JobFormState extends State<JobForm> {
     }
   }
 
+  @override
+  Widget build(BuildContext context) {
+    final totalImages = _selectedImages.length + _existingImages.length;
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: Text(
+          widget.initialData == null ? 'Add Job' : 'Edit Job',
+          style: const TextStyle(color: Colors.black),
+        ),
+        backgroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.black),
+        elevation: 0,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            children: [
+              // Description Field
+              TextFormField(
+                controller: _descriptionController,
+                maxLength: 120,
+                style: const TextStyle(color: Colors.black),
+                decoration: InputDecoration(
+                  labelText: 'Job Description',
+                  labelStyle: const TextStyle(color: Colors.grey),
+                  prefixIcon: const Icon(Icons.description, color: Colors.grey),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(color: Colors.grey),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(color: Colors.blue),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                validator: (value) => (value == null || value.isEmpty)
+                    ? 'Please enter a description'
+                    : null,
+              ),
+              const SizedBox(height: 16.0),
+
+              // Category Dropdown
+              DropdownButtonFormField<String>(
+                value: _selectedCategory,
+                dropdownColor: Colors.white,
+                style: const TextStyle(color: Colors.black),
+                decoration: InputDecoration(
+                  labelText: 'Job Category',
+                  labelStyle: const TextStyle(color: Colors.grey),
+                  prefixIcon: const Icon(Icons.category, color: Colors.grey),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(color: Colors.grey),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(color: Colors.blue),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                items: _categories
+                    .map((cat) => DropdownMenuItem(
+                          value: cat,
+                          child: Text(
+                            cat,
+                            style: const TextStyle(color: Colors.black),
+                          ),
+                        ))
+                    .toList(),
+                onChanged: (value) => setState(() => _selectedCategory = value),
+                validator: (value) =>
+                    value == null ? 'Please select a category' : null,
+              ),
+              const SizedBox(height: 16.0),
+
+              // Date Range Picker
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.calendar_today, color: Colors.grey),
+                        const SizedBox(width: 10),
+                        Text(
+                          _jobDateRange != null
+                              ? '${DateFormat('MMM d').format(_jobDateRange!.start)} - ${DateFormat('MMM d').format(_jobDateRange!.end)}'
+                              : 'Select date range',
+                          style: const TextStyle(color: Colors.black),
+                        ),
+                      ],
+                    ),
+                    ElevatedButton(
+                      onPressed: _pickJobDateRange,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.black,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: const Text('Select Dates'),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16.0),
+
+              // Time Pickers
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildTimePicker(
+                      time: _startTime,
+                      label: 'Start Time',
+                      onTap: () => _pickTime(isStart: true),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _buildTimePicker(
+                      time: _endTime,
+                      label: 'End Time',
+                      onTap: () => _pickTime(isStart: false),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16.0),
+
+              // Price Slider
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(Icons.attach_money, color: Colors.grey),
+                      SizedBox(width: 8),
+                      Text(
+                        'Price',
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Text(
+                    '\$${_price.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Slider(
+                    value: _price,
+                    min: 0,
+                    max: 500,
+                    divisions: 100,
+                    label: _price.toStringAsFixed(0),
+                    activeColor: Colors.black,
+                    inactiveColor: Colors.grey[300],
+                    onChanged: (value) => setState(() => _price = value),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24.0),
+
+              // Image Section
+              const Row(
+                children: [
+                  Icon(Icons.photo_library, color: Colors.grey),
+                  SizedBox(width: 8),
+                  Text(
+                    'Images',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+              Text(
+                '(${totalImages}/4)',
+                style: const TextStyle(
+                  color: Colors.grey,
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 8.0),
+              SizedBox(
+                height: 150,
+                child: totalImages > 0
+                    ? ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: [
+                          ..._existingImages.asMap().entries.map((entry) {
+                            int index = entry.key;
+                            String imageUrl = entry.value;
+                            return _buildImageWithDelete(imageUrl, index,
+                                isExisting: true);
+                          }),
+                          ..._selectedImages.asMap().entries.map((entry) {
+                            int index = entry.key;
+                            File imageFile = entry.value;
+                            return _buildImageWithDelete(imageFile, index,
+                                isExisting: false);
+                          }),
+                        ],
+                      )
+                    : Container(
+                        height: 150,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.camera_alt,
+                                size: 40,
+                                color: Colors.grey[400],
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Add images',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+              ),
+              const SizedBox(height: 16.0),
+              ElevatedButton.icon(
+                onPressed: totalImages < 4 ? _pickImages : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: totalImages < 4 ? Colors.black : Colors.grey,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                icon: const Icon(Icons.add_a_photo, color: Colors.white),
+                label:
+                    Text(totalImages < 4 ? "Add Images" : "Max Images Reached"),
+              ),
+              const SizedBox(height: 32.0),
+
+              // Action Buttons
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: _closeForm,
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: const Text('Cancel'),
+                  ),
+                  const SizedBox(width: 16),
+                  ElevatedButton(
+                    onPressed: _saveJob,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.black,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child:
+                        Text(widget.initialData == null ? 'Submit' : 'Update'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTimePicker({
+    required TimeOfDay? time,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  label == 'Start Time' ? Icons.alarm_on : Icons.alarm_off,
+                  color: Colors.grey,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              time != null ? time.format(context) : 'Not set',
+              style: const TextStyle(
+                color: Colors.black,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImageWithDelete(dynamic image, int index,
+      {required bool isExisting}) {
+    return Container(
+      margin: const EdgeInsets.only(right: 8),
+      child: Stack(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: isExisting
+                ? Image.network(image,
+                    height: 150, width: 150, fit: BoxFit.cover)
+                : Image.file(image, height: 150, width: 150, fit: BoxFit.cover),
+          ),
+          Positioned(
+            top: 8,
+            right: 8,
+            child: GestureDetector(
+              onTap: () => _deleteImage(index, isExisting: isExisting),
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.7),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.close,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _closeForm() {
     if (Navigator.canPop(context)) {
       Navigator.of(context).pop();
@@ -59,10 +453,31 @@ class _JobFormState extends State<JobForm> {
   }
 
   Future<void> _pickJobDateRange() async {
-    final picked = await showDateRangePicker(
+    final DateTimeRange? picked = await showDateRangePicker(
       context: context,
       firstDate: DateTime.now().subtract(const Duration(days: 1)),
       lastDate: DateTime(2101),
+      builder: (BuildContext context, Widget? child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Colors.black,
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: Colors.black,
+            ),
+            dialogTheme: DialogTheme(
+              backgroundColor: Colors.white,
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.black,
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (picked != null) {
       setState(() {
@@ -72,10 +487,27 @@ class _JobFormState extends State<JobForm> {
   }
 
   Future<void> _pickTime({required bool isStart}) async {
-    final picked = await showTimePicker(
+    final TimeOfDay? picked = await showTimePicker(
       context: context,
-      initialTime: isStart ? (_startTime ?? TimeOfDay.now()) : (_endTime ?? TimeOfDay.now()),
+      initialTime: isStart
+          ? (_startTime ?? TimeOfDay.now())
+          : (_endTime ?? TimeOfDay.now()),
+      builder: (BuildContext context, Widget? child) {
+        return Theme(
+          data: ThemeData.light().copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Colors.black,
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: Colors.black,
+            ),
+            dialogBackgroundColor: Colors.white,
+          ),
+          child: child!,
+        );
+      },
     );
+
     if (picked != null) {
       setState(() {
         if (isStart) {
@@ -90,7 +522,8 @@ class _JobFormState extends State<JobForm> {
   Future<void> _pickImages() async {
     final pickedFiles = await _picker.pickMultiImage();
     if (pickedFiles != null) {
-      if (_selectedImages.length + _existingImages.length + pickedFiles.length > 4) {
+      if (_selectedImages.length + _existingImages.length + pickedFiles.length >
+          4) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("You can only add up to 4 images!")),
         );
@@ -140,7 +573,8 @@ class _JobFormState extends State<JobForm> {
 
     if (_selectedImages.isNotEmpty) {
       final jobId = job.id ?? DateTime.now().millisecondsSinceEpoch.toString();
-      final uploadedUrls = await StorageService().uploadJobImages(_selectedImages, jobId);
+      final uploadedUrls =
+          await StorageService().uploadJobImages(_selectedImages, jobId);
       job.imageUrls.addAll(uploadedUrls);
     }
 
@@ -151,161 +585,5 @@ class _JobFormState extends State<JobForm> {
     }
 
     _closeForm();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final totalImages = _selectedImages.length + _existingImages.length;
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.initialData == null ? 'Add Job' : 'Edit Job'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            children: [
-              TextFormField(
-                controller: _descriptionController,
-                maxLength: 120,
-                decoration: const InputDecoration(
-                  labelText: 'Job Description',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) => (value == null || value.isEmpty)
-                    ? 'Please enter a description'
-                    : null,
-              ),
-              const SizedBox(height: 12.0),
-
-              // Category dropdown
-              DropdownButtonFormField<String>(
-                value: _selectedCategory,
-                decoration: const InputDecoration(
-                  labelText: 'Job Category',
-                  border: OutlineInputBorder(),
-                ),
-                items: _categories
-                    .map((cat) => DropdownMenuItem(value: cat, child: Text(cat)))
-                    .toList(),
-                onChanged: (value) => setState(() => _selectedCategory = value),
-                validator: (value) => value == null ? 'Please select a category' : null,
-              ),
-              const SizedBox(height: 12.0),
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(_jobDateRange != null
-                      ? 'From: ${_jobDateRange!.start.toLocal().toString().split(' ')[0]}\nTo: ${_jobDateRange!.end.toLocal().toString().split(' ')[0]}'
-                      : 'Pick job date range'),
-                  TextButton(
-                    onPressed: _pickJobDateRange,
-                    child: const Text('Select'),
-                  )
-                ],
-              ),
-              const SizedBox(height: 8.0),
-              Row(
-                children: [
-                  Expanded(
-                    child: ListTile(
-                      title: Text(_startTime != null ? _startTime!.format(context) : 'Start Time'),
-                      trailing: const Icon(Icons.access_time),
-                      onTap: () => _pickTime(isStart: true),
-                    ),
-                  ),
-                  Expanded(
-                    child: ListTile(
-                      title: Text(_endTime != null ? _endTime!.format(context) : 'End Time'),
-                      trailing: const Icon(Icons.access_time),
-                      onTap: () => _pickTime(isStart: false),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8.0),
-              Text('Price: \$${_price.toStringAsFixed(2)}'),
-              Slider(
-                value: _price,
-                min: 0,
-                max: 500,
-                divisions: 100,
-                label: _price.toStringAsFixed(0),
-                onChanged: (value) => setState(() => _price = value),
-              ),
-              const SizedBox(height: 16.0),
-              SizedBox(
-                height: 150,
-                child: totalImages > 0
-                    ? ListView(
-                  scrollDirection: Axis.horizontal,
-                  children: [
-                    ..._existingImages.asMap().entries.map((entry) {
-                      int index = entry.key;
-                      String imageUrl = entry.value;
-                      return _buildImageWithDelete(imageUrl, index, isExisting: true);
-                    }),
-                    ..._selectedImages.asMap().entries.map((entry) {
-                      int index = entry.key;
-                      File imageFile = entry.value;
-                      return _buildImageWithDelete(imageFile, index, isExisting: false);
-                    }),
-                  ],
-                )
-                    : Container(
-                  height: 150,
-                  color: Colors.grey[300],
-                  child: const Center(child: Icon(Icons.camera_alt, size: 40)),
-                ),
-              ),
-              const SizedBox(height: 8.0),
-              ElevatedButton.icon(
-                onPressed: totalImages < 4 ? _pickImages : null,
-                icon: const Icon(Icons.add_a_photo),
-                label: Text(totalImages < 4 ? "Add Images (${totalImages}/4)" : "Max Images Reached"),
-              ),
-              const SizedBox(height: 16.0),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  TextButton(
-                    onPressed: _closeForm,
-                    child: const Text('Cancel'),
-                  ),
-                  ElevatedButton(
-                    onPressed: _saveJob,
-                    child: Text(widget.initialData == null ? 'Submit' : 'Update'),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildImageWithDelete(dynamic image, int index, {required bool isExisting}) {
-    return Stack(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4.0),
-          child: isExisting
-              ? Image.network(image, height: 150, fit: BoxFit.cover)
-              : Image.file(image, height: 150, fit: BoxFit.cover),
-        ),
-        Positioned(
-          top: 5,
-          right: 5,
-          child: IconButton(
-            icon: const Icon(Icons.delete, color: Colors.red),
-            onPressed: () => _deleteImage(index, isExisting: isExisting),
-          ),
-        ),
-      ],
-    );
   }
 }

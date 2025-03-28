@@ -54,19 +54,15 @@ class _FixerRegisterScreenState extends State<FixerRegisterScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // Create user
       final cred = await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passController.text.trim(),
       );
 
       final uid = cred.user!.uid;
-
-      // Upload images
       final govIdUrl = await _uploadImage(_govIdImage!, 'govIds/$uid.jpg');
       final selfieUrl = await _uploadImage(_selfieImage!, 'selfies/$uid.jpg');
 
-      // Save user data in Firestore
       await FirebaseFirestore.instance.collection('users').doc(uid).set({
         'role': 'fixer',
         'email': _emailController.text.trim(),
@@ -90,80 +86,187 @@ class _FixerRegisterScreenState extends State<FixerRegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Fixer Signup")),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              TextFormField(
-                controller: _emailController,
-                decoration: const InputDecoration(labelText: "Email"),
-                validator: (v) => v == null || !v.contains('@') ? "Enter a valid email" : null,
-              ),
-              const SizedBox(height: 10),
-              TextFormField(
-                controller: _passController,
-                obscureText: true,
-                decoration: const InputDecoration(labelText: "Password"),
-                validator: (v) => v == null || v.length < 6 ? "Min 6 characters" : null,
-              ),
-              const SizedBox(height: 10),
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(labelText: "Full Name"),
-                validator: (v) => v == null || v.isEmpty ? "Enter your name" : null,
-              ),
-              const SizedBox(height: 10),
-              TextFormField(
-                controller: _birthYearController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: "Birth Year"),
-                validator: (v) {
-                  if (v == null || v.isEmpty) return "Enter birth year";
-                  final year = int.tryParse(v);
-                  return (year == null || year < 1900 || year > DateTime.now().year)
-                      ? "Enter a valid year"
-                      : null;
-                },
-              ),
-              const SizedBox(height: 20),
-
-              // Government ID
-              Row(
-                children: [
-                  const Text("Government ID: "),
-                  ElevatedButton.icon(
-                    onPressed: () => _pickImage(true),
-                    icon: const Icon(Icons.upload),
-                    label: Text(_govIdImage != null ? "Selected" : "Upload"),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: const Text(
+          "Fixer Registration",
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black),
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 20),
+                Icon(Icons.handyman, size: 72, color: Colors.black),
+                const SizedBox(height: 20),
+                Text(
+                  "Join as a Fixer",
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
                   ),
-                ],
-              ),
-
-              const SizedBox(height: 10),
-
-              // Selfie
-              Row(
-                children: [
-                  const Text("Selfie: "),
-                  ElevatedButton.icon(
-                    onPressed: () => _pickImage(false),
-                    icon: const Icon(Icons.upload),
-                    label: Text(_selfieImage != null ? "Selected" : "Upload"),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "Complete your profile to start accepting jobs",
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey[600],
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 40),
 
-              const SizedBox(height: 20),
-              _isLoading
-                  ? const CircularProgressIndicator()
-                  : ElevatedButton(
-                onPressed: _registerFixer,
-                child: const Text("Register"),
-              ),
-            ],
+                // Form Fields
+                TextFormField(
+                  controller: _emailController,
+                  decoration: InputDecoration(
+                    labelText: "Email",
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.email),
+                  ),
+                  validator: (v) => v == null || !v.contains('@') ? "Enter a valid email" : null,
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _passController,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    labelText: "Password",
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.lock),
+                  ),
+                  validator: (v) => v == null || v.length < 6 ? "Min 6 characters" : null,
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _nameController,
+                  decoration: InputDecoration(
+                    labelText: "Full Name",
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.person),
+                  ),
+                  validator: (v) => v == null || v.isEmpty ? "Enter your name" : null,
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _birthYearController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: "Birth Year",
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.calendar_today),
+                  ),
+                  validator: (v) {
+                    if (v == null || v.isEmpty) return "Enter birth year";
+                    final year = int.tryParse(v);
+                    return (year == null || year < 1900 || year > DateTime.now().year)
+                        ? "Enter a valid year"
+                        : null;
+                  },
+                ),
+                const SizedBox(height: 24),
+
+                // Document Uploads
+                Text(
+                  "Upload Documents:",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Government ID",
+                            style: TextStyle(color: Colors.grey[600]),
+                          ),
+                          const SizedBox(height: 8),
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              onPressed: () => _pickImage(true),
+                              icon: Icon(Icons.upload, color: Colors.black),
+                              label: Text(
+                                _govIdImage != null ? "Document Selected" : "Select Document",
+                                style: TextStyle(color: Colors.black),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                side: BorderSide(color: Colors.grey[400]!),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Selfie Photo",
+                            style: TextStyle(color: Colors.grey[600]),
+                          ),
+                          const SizedBox(height: 8),
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              onPressed: () => _pickImage(false),
+                              icon: Icon(Icons.camera_alt, color: Colors.black),
+                              label: Text(
+                                _selfieImage != null ? "Photo Selected" : "Take Selfie",
+                                style: TextStyle(color: Colors.black),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                side: BorderSide(color: Colors.grey[400]!),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 40),
+
+                // Register Button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.redAccent[700],
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    onPressed: _isLoading ? null : _registerFixer,
+                    child: _isLoading
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : const Text("Complete Registration"),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
