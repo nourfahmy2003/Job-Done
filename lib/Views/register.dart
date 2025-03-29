@@ -12,6 +12,7 @@ class CustomRegisterScreen extends StatefulWidget {
 
 class _CustomRegisterScreenState extends State<CustomRegisterScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController(); // Added name controller
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
@@ -35,6 +36,7 @@ class _CustomRegisterScreenState extends State<CustomRegisterScreen> {
           .doc(credential.user!.uid)
           .set({
         'role': 'customer',
+        'name': _nameController.text.trim(), // Save name
         'email': _emailController.text.trim(),
         'createdAt': FieldValue.serverTimestamp(),
       });
@@ -51,6 +53,14 @@ class _CustomRegisterScreenState extends State<CustomRegisterScreen> {
     } finally {
       setState(() => _isLoading = false);
     }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 
   @override
@@ -103,6 +113,23 @@ class _CustomRegisterScreenState extends State<CustomRegisterScreen> {
                   ),
                 ),
                 const SizedBox(height: 40),
+
+                // Name Field - Added this new field
+                TextFormField(
+                  controller: _nameController,
+                  decoration: InputDecoration(
+                    labelText: "Full Name",
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.person),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your name';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
 
                 // Email Field
                 TextFormField(
