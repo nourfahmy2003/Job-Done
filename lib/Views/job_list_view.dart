@@ -6,6 +6,7 @@ import '../Model/job_entry_model.dart';
 import '../Controller/job_entry_service.dart';
 import './login.dart';
 import './add_job_view.dart';
+import './offers_view.dart';
 
 class JobListView extends StatelessWidget {
   const JobListView({super.key});
@@ -25,7 +26,7 @@ class JobListView extends StatelessWidget {
     final JobService jobService = JobService();
 
     return Scaffold(
-      backgroundColor: Colors.white, // Black background
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text(
           "My Jobs",
@@ -38,6 +39,19 @@ class JobListView extends StatelessWidget {
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.request_page),
+            color: Colors.white,
+            onPressed: () {
+              // This will navigate to a general offers view
+              // You might want to modify this to show all offers for all jobs
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (_) => const OffersView(jobId: 'all')),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.logout),
             color: Colors.white,
@@ -102,7 +116,7 @@ class JobListView extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: Colors.black,
                       ),
                     ),
                   ),
@@ -113,7 +127,7 @@ class JobListView extends StatelessWidget {
                     return Container(
                       margin: const EdgeInsets.only(bottom: 16),
                       decoration: BoxDecoration(
-                        color: Colors.grey[900],
+                        color: Colors.grey[200],
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Column(
@@ -123,7 +137,7 @@ class JobListView extends StatelessWidget {
                           Container(
                             height: 200,
                             decoration: BoxDecoration(
-                              color: Colors.grey[800],
+                              color: Colors.grey[300],
                               borderRadius: const BorderRadius.vertical(
                                 top: Radius.circular(12),
                               ),
@@ -170,7 +184,7 @@ class JobListView extends StatelessWidget {
                                   job.desc,
                                   style: const TextStyle(
                                     fontSize: 16,
-                                    color: Colors.white,
+                                    color: Colors.black,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -180,13 +194,13 @@ class JobListView extends StatelessWidget {
                                     Icon(
                                       Icons.calendar_today,
                                       size: 16,
-                                      color: Colors.grey[400],
+                                      color: Colors.grey[600],
                                     ),
                                     const SizedBox(width: 8),
                                     Text(
                                       formattedDate,
                                       style: TextStyle(
-                                        color: Colors.grey[400],
+                                        color: Colors.grey[600],
                                       ),
                                     ),
                                     const Spacer(),
@@ -194,12 +208,49 @@ class JobListView extends StatelessWidget {
                                       '\$${job.price}',
                                       style: const TextStyle(
                                         fontSize: 18,
-                                        color: Colors.white,
+                                        color: Colors.black,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                   ],
                                 ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Status: ${job.status.toUpperCase()}',
+                                  style: TextStyle(
+                                    color: job.status == 'pending'
+                                        ? Colors.orange
+                                        : job.status == 'accepted'
+                                            ? Colors.green
+                                            : Colors.red,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                if (job.status == 'pending')
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 12),
+                                    child: SizedBox(
+                                      width: double.infinity,
+                                      child: ElevatedButton(
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) =>
+                                                  OffersView(jobId: job.id!),
+                                            ),
+                                          );
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.black,
+                                          foregroundColor: Colors.white,
+                                          padding: const EdgeInsets.symmetric(
+                                              vertical: 12),
+                                        ),
+                                        child: const Text('View Offers'),
+                                      ),
+                                    ),
+                                  ),
                               ],
                             ),
                           ),

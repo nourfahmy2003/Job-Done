@@ -1,7 +1,10 @@
 import 'dart:io';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import '../Model/job_entry_model.dart';
 import '../Controller/job_entry_service.dart';
 import '../Controller/storage_service.dart';
@@ -25,17 +28,41 @@ class _JobFormState extends State<JobForm> {
   TimeOfDay? _endTime;
 
   final ImagePicker _picker = ImagePicker();
-  List<File> _selectedImages = [];
+  List<XFile> _selectedImages = [];
   List<String> _existingImages = [];
 
   String? _selectedCategory;
-  final List<String> _categories = [
-    'Plumbing',
-    'Electrical',
-    'Cleaning',
-    'Painting',
-    'Gardening',
-    'Other',
+  final List<Map<String, dynamic>> _categories = [
+    {
+      'name': 'Plumbing',
+      'icon': Icons.plumbing,
+      'color': Colors.blue,
+    },
+    {
+      'name': 'Electrical',
+      'icon': Icons.electrical_services,
+      'color': Colors.amber,
+    },
+    {
+      'name': 'Cleaning',
+      'icon': Icons.cleaning_services,
+      'color': Colors.lightBlue,
+    },
+    {
+      'name': 'Painting',
+      'icon': Icons.format_paint,
+      'color': Colors.deepPurple,
+    },
+    {
+      'name': 'Gardening',
+      'icon': Icons.nature,
+      'color': Colors.green,
+    },
+    {
+      'name': 'Other',
+      'icon': Icons.miscellaneous_services,
+      'color': Colors.grey,
+    },
   ];
 
   @override
@@ -73,7 +100,6 @@ class _JobFormState extends State<JobForm> {
           key: _formKey,
           child: ListView(
             children: [
-              // Description Field
               TextFormField(
                 controller: _descriptionController,
                 maxLength: 120,
@@ -90,7 +116,7 @@ class _JobFormState extends State<JobForm> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: Colors.blue),
+                    borderSide: const BorderSide(color: Colors.black),
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
@@ -99,8 +125,6 @@ class _JobFormState extends State<JobForm> {
                     : null,
               ),
               const SizedBox(height: 16.0),
-
-              // Category Dropdown
               DropdownButtonFormField<String>(
                 value: _selectedCategory,
                 dropdownColor: Colors.white,
@@ -117,26 +141,36 @@ class _JobFormState extends State<JobForm> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: Colors.blue),
+                    borderSide: const BorderSide(color: Colors.black),
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
                 items: _categories
-                    .map((cat) => DropdownMenuItem(
-                          value: cat,
-                          child: Text(
-                            cat,
-                            style: const TextStyle(color: Colors.black),
-                          ),
-                        ))
+                    .map<DropdownMenuItem<String>>(
+                        (category) => DropdownMenuItem<String>(
+                              value: category['name'],
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    category['icon'],
+                                    color: category['color'],
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    category['name'],
+                                    style: const TextStyle(color: Colors.black),
+                                  ),
+                                ],
+                              ),
+                            ))
                     .toList(),
-                onChanged: (value) => setState(() => _selectedCategory = value),
-                validator: (value) =>
+                onChanged: (String? value) =>
+                    setState(() => _selectedCategory = value),
+                validator: (String? value) =>
                     value == null ? 'Please select a category' : null,
               ),
               const SizedBox(height: 16.0),
-
-              // Date Range Picker
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
@@ -173,8 +207,6 @@ class _JobFormState extends State<JobForm> {
                 ),
               ),
               const SizedBox(height: 16.0),
-
-              // Time Pickers
               Row(
                 children: [
                   Expanded(
@@ -195,8 +227,6 @@ class _JobFormState extends State<JobForm> {
                 ],
               ),
               const SizedBox(height: 16.0),
-
-              // Price Slider
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -234,8 +264,6 @@ class _JobFormState extends State<JobForm> {
                 ],
               ),
               const SizedBox(height: 24.0),
-
-              // Image Section
               const Row(
                 children: [
                   Icon(Icons.photo_library, color: Colors.grey),
@@ -271,7 +299,7 @@ class _JobFormState extends State<JobForm> {
                           }),
                           ..._selectedImages.asMap().entries.map((entry) {
                             int index = entry.key;
-                            File imageFile = entry.value;
+                            XFile imageFile = entry.value;
                             return _buildImageWithDelete(imageFile, index,
                                 isExisting: false);
                           }),
@@ -320,8 +348,6 @@ class _JobFormState extends State<JobForm> {
                     Text(totalImages < 4 ? "Add Images" : "Max Images Reached"),
               ),
               const SizedBox(height: 32.0),
-
-              // Action Buttons
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
@@ -418,9 +444,35 @@ class _JobFormState extends State<JobForm> {
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
             child: isExisting
-                ? Image.network(image,
-                    height: 150, width: 150, fit: BoxFit.cover)
-                : Image.file(image, height: 150, width: 150, fit: BoxFit.cover),
+                ? Image.network(
+                    image,
+                    height: 150,
+                    width: 150,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      color: Colors.grey,
+                      child: const Icon(Icons.error),
+                    ),
+                  )
+                : FutureBuilder<Uint8List>(
+                    future: (image as XFile).readAsBytes(),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                        return Image.memory(
+                          snapshot.data!,
+                          height: 150,
+                          width: 150,
+                          fit: BoxFit.cover,
+                        );
+                      }
+                      return Container(
+                        height: 150,
+                        width: 150,
+                        color: Colors.grey,
+                        child: const Center(child: CircularProgressIndicator()),
+                      );
+                    },
+                  ),
           ),
           Positioned(
             top: 8,
@@ -446,12 +498,6 @@ class _JobFormState extends State<JobForm> {
     );
   }
 
-  void _closeForm() {
-    if (Navigator.canPop(context)) {
-      Navigator.of(context).pop();
-    }
-  }
-
   Future<void> _pickJobDateRange() async {
     final DateTimeRange? picked = await showDateRangePicker(
       context: context,
@@ -459,15 +505,16 @@ class _JobFormState extends State<JobForm> {
       lastDate: DateTime(2101),
       builder: (BuildContext context, Widget? child) {
         return Theme(
-          data: Theme.of(context).copyWith(
+          data: ThemeData.light().copyWith(
             colorScheme: const ColorScheme.light(
               primary: Colors.black,
               onPrimary: Colors.white,
               surface: Colors.white,
               onSurface: Colors.black,
             ),
-            dialogTheme: DialogTheme(
+            dialogTheme: const DialogTheme(
               backgroundColor: Colors.white,
+              surfaceTintColor: Colors.transparent,
             ),
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(
@@ -501,7 +548,9 @@ class _JobFormState extends State<JobForm> {
               surface: Colors.white,
               onSurface: Colors.black,
             ),
-            dialogBackgroundColor: Colors.white,
+            dialogTheme: const DialogTheme(
+              backgroundColor: Colors.white,
+            ),
           ),
           child: child!,
         );
@@ -530,7 +579,7 @@ class _JobFormState extends State<JobForm> {
         return;
       }
       setState(() {
-        _selectedImages.addAll(pickedFiles.map((file) => File(file.path)));
+        _selectedImages.addAll(pickedFiles);
       });
     }
   }
@@ -543,6 +592,12 @@ class _JobFormState extends State<JobForm> {
         _selectedImages.removeAt(index);
       }
     });
+  }
+
+  void _closeForm() {
+    if (Navigator.canPop(context)) {
+      Navigator.of(context).pop();
+    }
   }
 
   Future<void> _saveJob() async {
@@ -584,6 +639,8 @@ class _JobFormState extends State<JobForm> {
       await jobService.updateJob(job);
     }
 
-    _closeForm();
+    if (mounted) {
+      Navigator.of(context).pop();
+    }
   }
 }

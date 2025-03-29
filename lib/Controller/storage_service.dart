@@ -1,30 +1,40 @@
 import 'dart:io';
-import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flutter/material.dart';
 
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:flutter/foundation.dart';
 
 class StorageService {
-  final FirebaseStorage storage = FirebaseStorage.instance;
+  Future<List<String>> uploadJobImages(List<XFile> images, String jobId) async {
+    final List<String> downloadUrls = [];
+    final storage = FirebaseStorage.instance;
 
-  /// Uploads multiple images and returns a list of download URLs.
-  Future<List<String>> uploadJobImages(List<File> imageFiles, String jobId) async {
-    List<String> imageUrls = [];
+    for (final image in images) {
+      try {
+        final String fileName =
+            'jobs/$jobId/${DateTime.now().millisecondsSinceEpoch}';
+        final Reference ref = storage.ref().child(fileName);
 
-    try {
-      for (File imageFile in imageFiles) {
-        final ref = storage
-            .ref()
-            .child('jobImages')
-            .child('$jobId-${DateTime.now().millisecondsSinceEpoch}');
+        if (kIsWeb) {
+          final bytes = await image.readAsBytes();
+          await ref.putData(bytes, SettableMetadata(contentType: 'image/jpeg'));
+        } else {
+          final path = image.path;
+          if (path.toLowerCase().endsWith('.heic')) {
+            // Handle HEIC conversion if needed (requires additional package)
+            throw Exception('HEIC format not supported');
+          }
+          await ref.putFile(File(path));
+        }
 
-        await ref.putFile(imageFile);
-        String downloadUrl = await ref.getDownloadURL();
-        imageUrls.add(downloadUrl);
+        final String downloadUrl = await ref.getDownloadURL();
+        downloadUrls.add(downloadUrl);
+      } catch (e) {
+        print('Error uploading image: $e');
+        // Continue with next image even if one fails
       }
-    } catch (e) {
-      print('Error uploading images: $e');
     }
 
-    return imageUrls;
+    return downloadUrls;
   }
 }

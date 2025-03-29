@@ -16,6 +16,7 @@ class Job {
   final TimeOfDayRange dailyTimeRange;
   final List<String> imageUrls;
   final String category;
+  final String status; // Add this field
 
   Job({
     this.id,
@@ -25,26 +26,53 @@ class Job {
     required this.dailyTimeRange,
     required this.imageUrls,
     required this.category,
+    this.status = 'pending', // Default value
   });
 
   Map<String, dynamic> toMap() {
     return {
       'desc': desc,
       'price': price,
-      'category': category,
-      'jobDateRange': {
-        'start': Timestamp.fromDate(jobDateRange.start),
-        'end': Timestamp.fromDate(jobDateRange.end),
+      'startDate': Timestamp.fromDate(jobDateRange.start),
+      'endDate': Timestamp.fromDate(jobDateRange.end),
+      'startTime': {
+        'hour': dailyTimeRange.start.hour,
+        'minute': dailyTimeRange.start.minute
       },
-      'dailyTimeRange': {
-        'startHour': dailyTimeRange.start.hour,
-        'startMinute': dailyTimeRange.start.minute,
-        'endHour': dailyTimeRange.end.hour,
-        'endMinute': dailyTimeRange.end.minute,
+      'endTime': {
+        'hour': dailyTimeRange.end.hour,
+        'minute': dailyTimeRange.end.minute
       },
       'imageUrls': imageUrls,
-      'assignedFixerId': null,
+      'category': category,
+      'status': status, // Add this line
     };
+  }
+
+  static Job fromMap(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return Job(
+      id: doc.id,
+      desc: data['desc'],
+      price: data['price'],
+      jobDateRange: DateTimeRange(
+        start: (data['startDate'] as Timestamp).toDate(),
+        end: (data['endDate'] as Timestamp).toDate(),
+      ),
+      dailyTimeRange: TimeOfDayRange(
+        start: TimeOfDay(
+          hour: data['startTime']['hour'],
+          minute: data['startTime']['minute'],
+        ),
+        end: TimeOfDay(
+          hour: data['endTime']['hour'],
+          minute: data['endTime']['minute'],
+        ),
+      ),
+      imageUrls: List<String>.from(data['imageUrls']),
+      category: data['category'],
+      status: data['status'] ?? 'pending', // Add this line
+    );
   }
 
   Job copyWith({
@@ -63,38 +91,6 @@ class Job {
       dailyTimeRange: dailyTimeRange ?? this.dailyTimeRange,
       imageUrls: imageUrls ?? this.imageUrls,
       category: category ?? this.category,
-    );
-  }
-
-  static Job fromMap(DocumentSnapshot doc) {
-    final map = doc.data() as Map<String, dynamic>;
-
-    final dateRangeMap = map['jobDateRange'] as Map<String, dynamic>;
-    final timeRangeMap = map['dailyTimeRange'] as Map<String, dynamic>;
-
-    return Job(
-      id: doc.id,
-      desc: map['desc'] ?? '',
-      price: map['price'] ?? 0,
-      category: map['category'] ?? 'Other',
-      jobDateRange: DateTimeRange(
-        start: (dateRangeMap['start'] as Timestamp).toDate(),
-        end: (dateRangeMap['end'] as Timestamp).toDate(),
-      ),
-      dailyTimeRange: TimeOfDayRange(
-        start: TimeOfDay(
-          hour: timeRangeMap['startHour'],
-          minute: timeRangeMap['startMinute'],
-        ),
-        end: TimeOfDay(
-          hour: timeRangeMap['endHour'],
-          minute: timeRangeMap['endMinute'],
-        ),
-      ),
-      imageUrls: (map['imageUrls'] as List<dynamic>?)
-          ?.map((item) => item.toString())
-          .toList() ??
-          [],
     );
   }
 }
