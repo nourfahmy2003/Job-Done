@@ -45,6 +45,8 @@ dependencies:
   pdf: ^3.11.3
   path_provider: ^2.1.5
   open_file: ^3.5.10
+  google_maps_flutter: ^2.5.0
+  geolocator: ^10.1.0
   
   
 
