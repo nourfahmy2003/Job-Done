@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import './fixer_map_view.dart';
 
 class FixerProfileView extends StatefulWidget {
   const FixerProfileView({super.key});
@@ -28,13 +29,11 @@ class _FixerProfileViewState extends State<FixerProfileView> {
     if (user == null) return;
 
     try {
-      // Fetch user info
       final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
       name = userDoc['name'] ?? '';
       email = user.email ?? '';
       selfieUrl = userDoc['selfieUrl'] ?? '';
 
-      // Fetch accepted offers
       final offersSnapshot = await FirebaseFirestore.instance
           .collection('offers')
           .where('fixerId', isEqualTo: user.uid)
@@ -76,7 +75,20 @@ class _FixerProfileViewState extends State<FixerProfileView> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Fixer Profile")),
+      appBar: AppBar(
+        title: const Text("Fixer Profile"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.map),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const FixerMapView()),
+              );
+            },
+          ),
+        ],
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
