@@ -17,6 +17,8 @@ class Job {
   final List<String> imageUrls;
   final String category;
   final String status; // Add this field
+  final double latitude;
+  final double longitude;
 
   Job({
     this.id,
@@ -27,6 +29,8 @@ class Job {
     required this.imageUrls,
     required this.category,
     this.status = 'pending', // Default value
+    this.latitude = 0.0,
+    this.longitude = 0.0,
   });
 
   Map<String, dynamic> toMap() {
@@ -46,6 +50,8 @@ class Job {
       'imageUrls': imageUrls,
       'category': category,
       'status': status, // Add this line
+      'latitude': latitude,
+      'longitude': longitude,
     };
   }
 
@@ -72,6 +78,8 @@ class Job {
       imageUrls: List<String>.from(data['imageUrls']),
       category: data['category'],
       status: data['status'] ?? 'pending', // Add this line
+      latitude: data['latitude'] ?? 0.0, 
+      longitude: data['longitude'] ?? 0.0,
     );
   }
 
@@ -82,6 +90,9 @@ class Job {
     TimeOfDayRange? dailyTimeRange,
     List<String>? imageUrls,
     String? category,
+    String? status,
+    double? latitude,
+    double? longitude,
   }) {
     return Job(
       id: this.id,
@@ -91,6 +102,9 @@ class Job {
       dailyTimeRange: dailyTimeRange ?? this.dailyTimeRange,
       imageUrls: imageUrls ?? this.imageUrls,
       category: category ?? this.category,
+      status: status ?? this.status,
+      latitude: latitude ?? this.latitude, 
+      longitude: longitude ?? this.longitude,
     );
   }
 }
