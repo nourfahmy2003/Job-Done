@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import '../Model/job_entry_model.dart';
+import 'package:geolocator/geolocator.dart';
 import '../Controller/job_entry_service.dart';
 import '../Controller/storage_service.dart';
 
@@ -32,6 +33,8 @@ class _JobFormState extends State<JobForm> {
   List<String> _existingImages = [];
 
   String? _selectedCategory;
+  double _latitude = 0.0;
+  double _longitude = 0.0;
   final List<Map<String, dynamic>> _categories = [
     {
       'name': 'Plumbing',
@@ -76,6 +79,8 @@ class _JobFormState extends State<JobForm> {
       _endTime = widget.initialData!.dailyTimeRange.end;
       _existingImages = List.from(widget.initialData!.imageUrls);
       _selectedCategory = widget.initialData!.category;
+      _latitude = widget.initialData!.latitude;
+      _longitude = widget.initialData!.longitude;
     }
   }
 
@@ -124,6 +129,25 @@ class _JobFormState extends State<JobForm> {
                     ? 'Please enter a description'
                     : null,
               ),
+              const SizedBox(height: 16.0),
+              ElevatedButton.icon(
+                onPressed: _getCurrentLocation,
+                icon: const Icon(Icons.my_location),
+                label: const Text("Use Current Location"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+              ),
+              if (_latitude != 0.0 && _longitude != 0.0)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Text(
+                    'Lat: ${_latitude.toStringAsFixed(5)}, Lng: ${_longitude.toStringAsFixed(5)}',
+                    style: const TextStyle(color: Colors.black54),
+                  ),
+                ),
               const SizedBox(height: 16.0),
               DropdownButtonFormField<String>(
                 value: _selectedCategory,
@@ -497,6 +521,25 @@ class _JobFormState extends State<JobForm> {
       ),
     );
   }
+  Future<void> _getCurrentLocation() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      await Geolocator.openLocationSettings();
+      return;
+    }
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) return;
+    }
+    if (permission == LocationPermission.deniedForever) return;
+
+    final position = await Geolocator.getCurrentPosition();
+    setState(() {
+      _latitude = position.latitude;
+      _longitude = position.longitude;
+    });
+  }
 
   Future<void> _pickJobDateRange() async {
     final DateTimeRange? picked = await showDateRangePicker(
@@ -605,7 +648,9 @@ class _JobFormState extends State<JobForm> {
         _jobDateRange == null ||
         _startTime == null ||
         _endTime == null ||
-        _selectedCategory == null) {
+        _selectedCategory == null ||
+        _latitude == 0.0 ||
+        _longitude == 0.0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please fill all fields")),
       );
@@ -624,6 +669,8 @@ class _JobFormState extends State<JobForm> {
       dailyTimeRange: timeRange,
       imageUrls: _existingImages,
       category: _selectedCategory!,
+      latitude: _latitude,
+      longitude: _longitude,
     );
 
     if (_selectedImages.isNotEmpty) {
@@ -644,3 +691,4 @@ class _JobFormState extends State<JobForm> {
     }
   }
 }
+
