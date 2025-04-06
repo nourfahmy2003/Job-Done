@@ -94,6 +94,16 @@ class _JobListViewState extends State<JobListView> {
       body: StreamBuilder<List<Job>>(
         stream: jobService.getUserJobs(),
         builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(
+              child: Text("Something went wrong: ${snapshot.error}"),
+            );
+          }
+
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return Center(
               child: Column(
@@ -159,8 +169,184 @@ class _JobListViewState extends State<JobListView> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          // ... rest of your job card implementation
-                          // (keep all the existing job card code)
+                          Container(
+                             height: 200,
+                             decoration: BoxDecoration(
+                               color: Colors.grey[300],
+                               borderRadius: const BorderRadius.vertical(
+                                 top: Radius.circular(12),
+                               ),
+                             ),
+                             child: job.imageUrls.isNotEmpty
+                                 ? CarouselSlider(
+                                     options: CarouselOptions(
+                                       height: 200,
+                                       enableInfiniteScroll: false,
+                                       viewportFraction: 1.0,
+                                       autoPlay: true,
+                                     ),
+                                     items: job.imageUrls.map((url) {
+                                       return ClipRRect(
+                                         borderRadius:
+                                             const BorderRadius.vertical(
+                                           top: Radius.circular(12),
+                                         ),
+                                         child: Image.network(
+                                           url,
+                                           height: 200,
+                                           width: double.infinity,
+                                           fit: BoxFit.cover,
+                                         ),
+                                       );
+                                     }).toList(),
+                                   )
+                                 : Center(
+                                     child: Icon(
+                                       Icons.work_outline,
+                                       size: 60,
+                                       color: Colors.grey[600],
+                                     ),
+                                   ),
+                           ),
+ 
+                           // Job Details
+                           Padding(
+                             padding: const EdgeInsets.all(16),
+                             child: Column(
+                               crossAxisAlignment: CrossAxisAlignment.start,
+                               children: [
+                                 Text(
+                                   job.desc,
+                                   style: const TextStyle(
+                                     fontSize: 16,
+                                     color: Colors.black,
+                                     fontWeight: FontWeight.bold,
+                                   ),
+                                 ),
+                                 const SizedBox(height: 8),
+                                 Row(
+                                   children: [
+                                     Icon(
+                                       Icons.calendar_today,
+                                       size: 16,
+                                       color: Colors.grey[600],
+                                     ),
+                                     const SizedBox(width: 8),
+                                     Text(
+                                       formattedDate,
+                                       style: TextStyle(
+                                         color: Colors.grey[600],
+                                       ),
+                                     ),
+                                     const Spacer(),
+                                     Text(
+                                       '\$${job.price}',
+                                       style: const TextStyle(
+                                         fontSize: 18,
+                                         color: Colors.black,
+                                         fontWeight: FontWeight.bold,
+                                       ),
+                                     ),
+                                   ],
+                                 ),
+                                 const SizedBox(height: 8),
+                                 Text(
+                                   'Status: ${job.status.toUpperCase()}',
+                                   style: TextStyle(
+                                     color: job.status == 'pending'
+                                         ? Colors.orange
+                                         : job.status == 'accepted'
+                                             ? Colors.green
+                                             : Colors.red,
+                                     fontWeight: FontWeight.bold,
+                                   ),
+                                 ),
+                                 if (job.status == 'pending')
+                                   Padding(
+                                     padding: const EdgeInsets.only(top: 12),
+                                     child: SizedBox(
+                                       width: double.infinity,
+                                       child: ElevatedButton(
+                                         onPressed: () {
+                                           Navigator.push(
+                                             context,
+                                             MaterialPageRoute(
+                                               builder: (_) =>
+                                                   OffersView(jobId: job.id!),
+                                             ),
+                                           );
+                                         },
+                                         style: ElevatedButton.styleFrom(
+                                           backgroundColor: Colors.black,
+                                           foregroundColor: Colors.white,
+                                           padding: const EdgeInsets.symmetric(
+                                               vertical: 12),
+                                         ),
+                                         child: const Text('View Offers'),
+                                       ),
+                                     ),
+                                   ),
+                               ],
+                             ),
+                           ),
+ 
+                           // Action Buttons
+                           Padding(
+                             padding: const EdgeInsets.symmetric(
+                                 horizontal: 16, vertical: 8),
+                             child: Row(
+                               mainAxisAlignment: MainAxisAlignment.end,
+                               children: [
+                                 // Edit Button
+                                 ElevatedButton.icon(
+                                   onPressed: () {
+                                     Navigator.push(
+                                       context,
+                                       MaterialPageRoute(
+                                         builder: (context) =>
+                                             JobForm(initialData: job),
+                                       ),
+                                     );
+                                   },
+                                   style: ElevatedButton.styleFrom(
+                                     backgroundColor: Colors.blue[800],
+                                     foregroundColor: Colors.white,
+                                     padding: const EdgeInsets.symmetric(
+                                       horizontal: 16,
+                                       vertical: 8,
+                                     ),
+                                     shape: RoundedRectangleBorder(
+                                       borderRadius: BorderRadius.circular(8),
+                                     ),
+                                   ),
+                                   icon: const Icon(Icons.edit,
+                                       size: 18, color: Colors.white),
+                                   label: const Text('Edit'),
+                                 ),
+                                 const SizedBox(width: 8),
+                                 // Delete Button
+                                 ElevatedButton.icon(
+                                   onPressed: () async {
+                                     await jobService.deleteJob(job.id!);
+                                   },
+                                   style: ElevatedButton.styleFrom(
+                                     backgroundColor: Colors.red[900],
+                                     foregroundColor: Colors.white,
+                                     padding: const EdgeInsets.symmetric(
+                                       horizontal: 16,
+                                       vertical: 8,
+                                     ),
+                                     shape: RoundedRectangleBorder(
+                                       borderRadius: BorderRadius.circular(8),
+                                     ),
+                                   ),
+                                   icon: const Icon(Icons.delete,
+                                       size: 18, color: Colors.white),
+                                   label: const Text('Delete'),
+                                 ),
+                               ],
+                             ),
+                           ),
                         ],
                       ),
                     );
