@@ -8,6 +8,67 @@ import './fixer_profile_view.dart';
 class FixerJobListView extends StatelessWidget {
   const FixerJobListView({super.key});
 
+  void _showOfferDialog(BuildContext context, Job job) {
+    final priceController = TextEditingController();
+    final messageController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Make an Offer'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: priceController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(labelText: "Your Price"),
+            ),
+            TextField(
+              controller: messageController,
+              decoration: const InputDecoration(labelText: "Message"),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            child: const Text("Cancel"),
+            onPressed: () => Navigator.of(ctx).pop(),
+          ),
+          ElevatedButton(
+            child: const Text("Submit"),
+            onPressed: () async {
+              final price = double.tryParse(priceController.text.trim());
+              final message = messageController.text.trim();
+              final fixerId = FirebaseAuth.instance.currentUser?.uid;
+
+              if (price == null || fixerId == null || message.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Please fill in all fields.")),
+                );
+                return;
+              }
+
+              await FirebaseFirestore.instance.collection('offers').add({
+                'fixerId': fixerId,
+                'jobId': job.id,
+                'price': price,
+                'message': message,
+                'status': 'pending',
+                'timestamp': FieldValue.serverTimestamp(),
+              });
+
+              Navigator.of(ctx).pop();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Offer submitted!")),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final jobStream = FirebaseFirestore.instance
@@ -19,7 +80,6 @@ class FixerJobListView extends StatelessWidget {
       appBar: AppBar(
         title: const Text("Available Jobs for Fixers"),
         actions: [
-          // Profile button
           IconButton(
             icon: const Icon(Icons.person),
             onPressed: () {
@@ -29,7 +89,6 @@ class FixerJobListView extends StatelessWidget {
               );
             },
           ),
-          // Logout button
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
@@ -75,7 +134,16 @@ class FixerJobListView extends StatelessWidget {
                       "From ${job.jobDateRange.start.toLocal().toString().split(' ')[0]} "
                       "to ${job.jobDateRange.end.toLocal().toString().split(' ')[0]}",
                     ),
-                    trailing: Text("\$${job.price}"),
+                    trailing: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text("\$${job.price}"),
+                        TextButton(
+                          onPressed: () => _showOfferDialog(context, job),
+                          child: const Text("Make Offer"),
+                        ),
+                      ],
+                    ),
                   ),
                 );
               },
