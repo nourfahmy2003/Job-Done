@@ -71,4 +71,11 @@ class JobService {
       return snapshot.docs.map((doc) => Job.fromMap(doc)).toList();
     });
   }
+  Future<List<Job>> getAllJobs() async {
+  final querySnapshot = await FirebaseFirestore.instance
+      .collectionGroup('job') // collects 'job' subcollections across all users
+      .get();
+
+  return querySnapshot.docs.map((doc) => Job.fromMap(doc)).toList();
+}
 }

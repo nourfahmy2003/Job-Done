@@ -56,32 +56,37 @@ class Job {
   }
 
   static Job fromMap(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
-    return Job(
-      id: doc.id,
-      desc: data['desc'],
-      price: data['price'],
-      jobDateRange: DateTimeRange(
-        start: (data['startDate'] as Timestamp).toDate(),
-        end: (data['endDate'] as Timestamp).toDate(),
+  final data = doc.data() as Map<String, dynamic>;
+
+  final Timestamp? startTimestamp = data['startDate'];
+  final Timestamp? endTimestamp = data['endDate'];
+
+  return Job(
+    id: doc.id,
+    desc: data['desc'] ?? '',
+    price: data['price'] ?? 0,
+    jobDateRange: DateTimeRange(
+      start: startTimestamp != null ? startTimestamp.toDate() : DateTime.now(),
+      end: endTimestamp != null ? endTimestamp.toDate() : DateTime.now().add(Duration(days: 1)),
+    ),
+    dailyTimeRange: TimeOfDayRange(
+      start: TimeOfDay(
+        hour: data['startTime']?['hour'] ?? 0,
+        minute: data['startTime']?['minute'] ?? 0,
       ),
-      dailyTimeRange: TimeOfDayRange(
-        start: TimeOfDay(
-          hour: data['startTime']['hour'],
-          minute: data['startTime']['minute'],
-        ),
-        end: TimeOfDay(
-          hour: data['endTime']['hour'],
-          minute: data['endTime']['minute'],
-        ),
+      end: TimeOfDay(
+        hour: data['endTime']?['hour'] ?? 0,
+        minute: data['endTime']?['minute'] ?? 0,
       ),
-      imageUrls: List<String>.from(data['imageUrls']),
-      category: data['category'],
-      status: data['status'] ?? 'pending', // Add this line
-      latitude: data['latitude'] ?? 0.0, 
-      longitude: data['longitude'] ?? 0.0,
-    );
-  }
+    ),
+    imageUrls: List<String>.from(data['imageUrls'] ?? []),
+    category: data['category'] ?? '',
+    status: data['status'] ?? 'pending',
+    latitude: data['latitude']?.toDouble() ?? 0.0,
+    longitude: data['longitude']?.toDouble() ?? 0.0,
+  );
+}
+
 
   Job copyWith({
     String? desc,
