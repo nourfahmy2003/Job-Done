@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import '../Model/job_entry_model.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../Controller/job_entry_service.dart';
 import '../Controller/storage_service.dart';
 
@@ -521,6 +522,7 @@ class _JobFormState extends State<JobForm> {
       ),
     );
   }
+
   Future<void> _getCurrentLocation() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
@@ -671,6 +673,7 @@ class _JobFormState extends State<JobForm> {
       category: _selectedCategory!,
       latitude: _latitude,
       longitude: _longitude,
+      ownerId: FirebaseAuth.instance.currentUser!.uid, // ✅ Add this line
     );
 
     if (_selectedImages.isNotEmpty) {
@@ -691,4 +694,3 @@ class _JobFormState extends State<JobForm> {
     }
   }
 }
-

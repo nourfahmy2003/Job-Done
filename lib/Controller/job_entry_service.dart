@@ -49,16 +49,12 @@ class JobService {
   }
 
   Future<DocumentReference<Object?>> addJob(Job job) async {
-    if (!await isDateRangeUnique(job.jobDateRange)) {
-      throw Exception('A job already exists within this date range.');
-    }
+   
     return await jobCollection.add(job.toMap());
   }
 
   Future<void> updateJob(Job job) async {
-    if (!await isDateRangeUnique(job.jobDateRange, excludeId: job.id)) {
-      throw Exception('Another job exists within this date range.');
-    }
+    
     return await jobCollection.doc(job.id).update(job.toMap());
   }
 
@@ -78,4 +74,5 @@ class JobService {
 
   return querySnapshot.docs.map((doc) => Job.fromMap(doc)).toList();
 }
+
 }

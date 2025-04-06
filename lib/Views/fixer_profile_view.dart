@@ -77,17 +77,7 @@ class _FixerProfileViewState extends State<FixerProfileView> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Fixer Profile"),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.map),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const FixerMapView()),
-              );
-            },
-          ),
-        ],
+        
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),

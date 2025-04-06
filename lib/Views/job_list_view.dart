@@ -94,16 +94,6 @@ class _JobListViewState extends State<JobListView> {
       body: StreamBuilder<List<Job>>(
         stream: jobService.getUserJobs(),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (snapshot.hasError) {
-            return Center(
-              child: Text("Something went wrong: ${snapshot.error}"),
-            );
-          }
-
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return Center(
               child: Column(
