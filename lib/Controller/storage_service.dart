@@ -21,7 +21,6 @@ class StorageService {
         } else {
           final path = image.path;
           if (path.toLowerCase().endsWith('.heic')) {
-            // Handle HEIC conversion if needed (requires additional package)
             throw Exception('HEIC format not supported');
           }
           await ref.putFile(File(path));
@@ -31,7 +30,6 @@ class StorageService {
         downloadUrls.add(downloadUrl);
       } catch (e) {
         print('Error uploading image: $e');
-        // Continue with next image even if one fails
       }
     }
 

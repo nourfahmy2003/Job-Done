@@ -8,7 +8,7 @@ class Offer {
   final int proposedPrice;
   final DateTime proposedStart;
   final DateTime proposedEnd;
-  final String status; // pending, accepted, rejected
+  final String status; 
   final String? message;
 
   Offer({

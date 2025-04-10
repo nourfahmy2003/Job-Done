@@ -12,7 +12,7 @@ class CustomRegisterScreen extends StatefulWidget {
 
 class _CustomRegisterScreenState extends State<CustomRegisterScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController(); // Added name controller
+  final _nameController = TextEditingController(); 
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
@@ -23,25 +23,22 @@ class _CustomRegisterScreenState extends State<CustomRegisterScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // Create user in Firebase Auth
       final credential =
           await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
 
-      // Save additional user data in Firestore
       await FirebaseFirestore.instance
           .collection('users')
           .doc(credential.user!.uid)
           .set({
         'role': 'customer',
-        'name': _nameController.text.trim(), // Save name
+        'name': _nameController.text.trim(), 
         'email': _emailController.text.trim(),
         'createdAt': FieldValue.serverTimestamp(),
       });
 
-      // Navigate to main app
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const AuthGate()),
@@ -114,7 +111,6 @@ class _CustomRegisterScreenState extends State<CustomRegisterScreen> {
                 ),
                 const SizedBox(height: 40),
 
-                // Name Field - Added this new field
                 TextFormField(
                   controller: _nameController,
                   decoration: InputDecoration(
@@ -131,7 +127,6 @@ class _CustomRegisterScreenState extends State<CustomRegisterScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Email Field
                 TextFormField(
                   controller: _emailController,
                   decoration: InputDecoration(
@@ -152,7 +147,6 @@ class _CustomRegisterScreenState extends State<CustomRegisterScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Password Field
                 TextFormField(
                   controller: _passwordController,
                   decoration: InputDecoration(

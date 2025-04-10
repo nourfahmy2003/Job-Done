@@ -6,7 +6,7 @@ import '../Model/job_entry_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:ui' as ui;
-import 'dart:typed_data'; 
+import 'dart:typed_data';
 
 class FixerMapView extends StatefulWidget {
   const FixerMapView({super.key});
@@ -19,7 +19,7 @@ class _FixerMapViewState extends State<FixerMapView> {
   final JobService _jobService = JobService();
   GoogleMapController? _mapController;
   final Set<Marker> _markers = {};
-  LatLng _currentLocation = const LatLng(43.651070, -79.347015); // fallback
+  LatLng _currentLocation = const LatLng(43.651070, -79.347015);
   bool _locationLoaded = false;
 
   @override
@@ -32,7 +32,6 @@ class _FixerMapViewState extends State<FixerMapView> {
     await _setCurrentLocation();
     await _loadAvailableJobs(_currentLocation);
 
-    // If map is already created, move camera now
     if (_mapController != null) {
       _mapController!.animateCamera(
         CameraUpdate.newCameraPosition(
@@ -52,7 +51,8 @@ class _FixerMapViewState extends State<FixerMapView> {
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) return;
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) return;
     }
 
     final position = await Geolocator.getCurrentPosition();
@@ -64,7 +64,8 @@ class _FixerMapViewState extends State<FixerMapView> {
         Marker(
           markerId: const MarkerId("my_location"),
           position: _currentLocation,
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+          icon:
+              BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
           infoWindow: const InfoWindow(title: "You are here"),
         ),
       );
@@ -72,9 +73,10 @@ class _FixerMapViewState extends State<FixerMapView> {
   }
 
   Future<BitmapDescriptor> _createCustomMarker(Job job) async {
-    final TextPainter textPainter = TextPainter(textDirection: TextDirection.ltr);
+    final TextPainter textPainter =
+        TextPainter(textDirection: TextDirection.ltr);
     final double price = job.price.toDouble();
-    
+
     textPainter.text = TextSpan(
       text: '\$${price.toStringAsFixed(0)}',
       style: const TextStyle(
@@ -83,15 +85,15 @@ class _FixerMapViewState extends State<FixerMapView> {
         color: Colors.white,
       ),
     );
-    
+
     textPainter.layout();
-    
+
     final ui.PictureRecorder pictureRecorder = ui.PictureRecorder();
     final Canvas canvas = Canvas(pictureRecorder);
-    
+
     final Paint circlePaint = Paint()..color = Theme.of(context).primaryColor;
     canvas.drawCircle(const Offset(40, 40), 40, circlePaint);
-    
+
     textPainter.paint(
       canvas,
       Offset(
@@ -99,10 +101,11 @@ class _FixerMapViewState extends State<FixerMapView> {
         40 - textPainter.height / 2,
       ),
     );
-    
+
     final ui.Image image = await pictureRecorder.endRecording().toImage(80, 80);
-    final ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-    
+    final ByteData? byteData =
+        await image.toByteData(format: ui.ImageByteFormat.png);
+
     return BitmapDescriptor.fromBytes(byteData!.buffer.asUint8List());
   }
 
@@ -123,7 +126,8 @@ class _FixerMapViewState extends State<FixerMapView> {
 
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Your offer at listed price has been sent.")),
+      const SnackBar(
+          content: Text("Your offer at listed price has been sent.")),
     );
   }
 
@@ -180,7 +184,7 @@ class _FixerMapViewState extends State<FixerMapView> {
               });
 
               Navigator.of(ctx).pop();
-              Navigator.pop(context); // Close job details
+              Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text("Your offer has been submitted.")),
               );
@@ -199,11 +203,12 @@ class _FixerMapViewState extends State<FixerMapView> {
       final nearbyJobs = snapshot.where((job) {
         if (job.latitude == 0.0 || job.longitude == 0.0) return false;
         final double distance = Geolocator.distanceBetween(
-          center.latitude,
-          center.longitude,
-          job.latitude,
-          job.longitude,
-        ) / 1000.0;
+              center.latitude,
+              center.longitude,
+              job.latitude,
+              job.longitude,
+            ) /
+            1000.0;
         return distance <= radiusInKm;
       }).toList();
 
@@ -247,7 +252,6 @@ class _FixerMapViewState extends State<FixerMapView> {
           ),
           child: Column(
             children: [
-              // Handle bar at the top
               Container(
                 width: 50,
                 height: 5,
@@ -262,7 +266,6 @@ class _FixerMapViewState extends State<FixerMapView> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Job Description and Price Section
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -281,7 +284,9 @@ class _FixerMapViewState extends State<FixerMapView> {
                               vertical: 8,
                             ),
                             decoration: BoxDecoration(
-                              color: Theme.of(context).primaryColor.withOpacity(0.1),
+                              color: Theme.of(context)
+                                  .primaryColor
+                                  .withOpacity(0.1),
                               borderRadius: BorderRadius.circular(15),
                             ),
                             child: Text(
@@ -297,7 +302,6 @@ class _FixerMapViewState extends State<FixerMapView> {
                       ),
                       const SizedBox(height: 20),
 
-                      // Category and Status Pills
                       Row(
                         children: [
                           Container(
@@ -359,7 +363,8 @@ class _FixerMapViewState extends State<FixerMapView> {
                                 const SizedBox(width: 8),
                                 Text(
                                   _formatDateRange(job.jobDateRange),
-                                  style: const TextStyle(fontWeight: FontWeight.w500),
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w500),
                                 ),
                               ],
                             ),
@@ -370,7 +375,8 @@ class _FixerMapViewState extends State<FixerMapView> {
                                 const SizedBox(width: 8),
                                 Text(
                                   _formatTimeRange(job.dailyTimeRange),
-                                  style: const TextStyle(fontWeight: FontWeight.w500),
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w500),
                                 ),
                               ],
                             ),
@@ -408,10 +414,12 @@ class _FixerMapViewState extends State<FixerMapView> {
                                         width: 200,
                                         decoration: BoxDecoration(
                                           color: Colors.grey[300],
-                                          borderRadius: BorderRadius.circular(15),
+                                          borderRadius:
+                                              BorderRadius.circular(15),
                                         ),
                                         child: const Center(
-                                          child: Icon(Icons.broken_image, size: 40),
+                                          child: Icon(Icons.broken_image,
+                                              size: 40),
                                         ),
                                       );
                                     },
@@ -490,6 +498,7 @@ class _FixerMapViewState extends State<FixerMapView> {
       final minute = time.minute.toString().padLeft(2, '0');
       return '$hour:$minute';
     }
+
     return '${formatTimeOfDay(range.start)} - ${formatTimeOfDay(range.end)}';
   }
 
@@ -500,34 +509,33 @@ class _FixerMapViewState extends State<FixerMapView> {
       body: !_locationLoaded
           ? const Center(child: CircularProgressIndicator())
           : GoogleMap(
-        initialCameraPosition: CameraPosition(
-          target: _currentLocation,
-          zoom: 12,
-        ),
-        myLocationEnabled: true,
-        myLocationButtonEnabled: true,
-        markers: _markers,
-        onMapCreated: (controller) {
-          _mapController = controller;
-
-          // Move camera once location is loaded
-          if (_locationLoaded) {
-            controller.animateCamera(
-              CameraUpdate.newCameraPosition(
-                CameraPosition(target: _currentLocation, zoom: 14),
+              initialCameraPosition: CameraPosition(
+                target: _currentLocation,
+                zoom: 12,
               ),
-            );
-          }
-        },
-        onCameraIdle: () async {
-          final bounds = await _mapController!.getVisibleRegion();
-          final center = LatLng(
-            (bounds.northeast.latitude + bounds.southwest.latitude) / 2,
-            (bounds.northeast.longitude + bounds.southwest.longitude) / 2,
-          );
-          _loadAvailableJobs(center);
-        },
-      ),
+              myLocationEnabled: true,
+              myLocationButtonEnabled: true,
+              markers: _markers,
+              onMapCreated: (controller) {
+                _mapController = controller;
+
+                if (_locationLoaded) {
+                  controller.animateCamera(
+                    CameraUpdate.newCameraPosition(
+                      CameraPosition(target: _currentLocation, zoom: 14),
+                    ),
+                  );
+                }
+              },
+              onCameraIdle: () async {
+                final bounds = await _mapController!.getVisibleRegion();
+                final center = LatLng(
+                  (bounds.northeast.latitude + bounds.southwest.latitude) / 2,
+                  (bounds.northeast.longitude + bounds.southwest.longitude) / 2,
+                );
+                _loadAvailableJobs(center);
+              },
+            ),
     );
   }
 }

@@ -24,13 +24,11 @@ class LoginScreen extends StatelessWidget {
               const Center(child: CircularProgressIndicator()),
         );
 
-        // Sign in with email/password
         await auth.signInWithEmailAndPassword(
           email: emailController.text.trim(),
           password: passwordController.text.trim(),
         );
 
-        // If successful, navigate to AuthGate which will redirect to proper home
         if (context.mounted) {
           Navigator.pushReplacement(
             context,
@@ -38,12 +36,12 @@ class LoginScreen extends StatelessWidget {
           );
         }
       } on FirebaseAuthException catch (e) {
-        Navigator.pop(context); // Dismiss loading indicator
+        Navigator.pop(context); 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(e.message ?? 'Authentication failed')),
         );
       } catch (e) {
-        Navigator.pop(context); // Dismiss loading indicator
+        Navigator.pop(context); 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('An error occurred')),
         );
@@ -78,7 +76,6 @@ class LoginScreen extends StatelessWidget {
               ),
               const SizedBox(height: 40),
 
-              // Custom Email/Password Form
               Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -86,7 +83,6 @@ class LoginScreen extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    // Email Field
                     TextFormField(
                       controller: emailController,
                       decoration: InputDecoration(
@@ -97,7 +93,6 @@ class LoginScreen extends StatelessWidget {
                       keyboardType: TextInputType.emailAddress,
                     ),
                     const SizedBox(height: 16),
-                    // Password Field
                     TextFormField(
                       controller: passwordController,
                       obscureText: true,
@@ -108,7 +103,6 @@ class LoginScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    // Sign In Button
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(

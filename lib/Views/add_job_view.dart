@@ -673,7 +673,7 @@ class _JobFormState extends State<JobForm> {
       category: _selectedCategory!,
       latitude: _latitude,
       longitude: _longitude,
-      ownerId: FirebaseAuth.instance.currentUser!.uid, // ✅ Add this line
+      ownerId: FirebaseAuth.instance.currentUser!.uid,
     );
 
     if (_selectedImages.isNotEmpty) {

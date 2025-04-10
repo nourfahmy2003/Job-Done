@@ -1,4 +1,3 @@
-// Controller/offer_service.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../Model/offer_model.dart';
 

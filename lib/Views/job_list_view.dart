@@ -57,7 +57,7 @@ class _JobListViewState extends State<JobListView> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(
-          userName.isEmpty ? "My Jobs" : "My Jobs - $userName", // Display name
+          userName.isEmpty ? "My Jobs" : "My Jobs - $userName", 
           style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,

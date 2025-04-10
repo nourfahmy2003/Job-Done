@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../Model/job_entry_model.dart'; 
+import '../Model/job_entry_model.dart';
 import 'package:flutter/material.dart';
 
 class JobService {
@@ -30,8 +30,8 @@ class JobService {
     }
   }
 
-  /// Check if any job overlaps with a new job's date range
-  Future<bool> isDateRangeUnique(DateTimeRange newRange, {String? excludeId}) async {
+  Future<bool> isDateRangeUnique(DateTimeRange newRange,
+      {String? excludeId}) async {
     final querySnapshot = await jobCollection.get();
 
     for (var doc in querySnapshot.docs) {
@@ -40,21 +40,18 @@ class JobService {
 
       final existingRange = existingJob.jobDateRange;
 
-      // Check for overlap
       final bool overlaps = newRange.start.isBefore(existingRange.end) &&
-                            newRange.end.isAfter(existingRange.start);
+          newRange.end.isAfter(existingRange.start);
       if (overlaps) return false;
     }
     return true;
   }
 
   Future<DocumentReference<Object?>> addJob(Job job) async {
-   
     return await jobCollection.add(job.toMap());
   }
 
   Future<void> updateJob(Job job) async {
-    
     return await jobCollection.doc(job.id).update(job.toMap());
   }
 
@@ -67,12 +64,11 @@ class JobService {
       return snapshot.docs.map((doc) => Job.fromMap(doc)).toList();
     });
   }
+
   Future<List<Job>> getAllJobs() async {
-  final querySnapshot = await FirebaseFirestore.instance
-      .collectionGroup('job') // collects 'job' subcollections across all users
-      .get();
+    final querySnapshot =
+        await FirebaseFirestore.instance.collectionGroup('job').get();
 
-  return querySnapshot.docs.map((doc) => Job.fromMap(doc)).toList();
-}
-
+    return querySnapshot.docs.map((doc) => Job.fromMap(doc)).toList();
+  }
 }
