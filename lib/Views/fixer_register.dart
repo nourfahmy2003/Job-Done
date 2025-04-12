@@ -129,6 +129,10 @@ class _FixerRegisterScreenState extends State<FixerRegisterScreen> {
                 ),
                 const SizedBox(height: 40),
 
+<<<<<<< HEAD
+=======
+                // Form Fields
+>>>>>>> b6204569c36ca6ddad69002b8753ca10b451a41f
                 TextFormField(
                   controller: _emailController,
                   decoration: InputDecoration(
@@ -178,6 +182,10 @@ class _FixerRegisterScreenState extends State<FixerRegisterScreen> {
                 ),
                 const SizedBox(height: 24),
 
+<<<<<<< HEAD
+=======
+                // Document Uploads
+>>>>>>> b6204569c36ca6ddad69002b8753ca10b451a41f
                 Text(
                   "Upload Documents:",
                   style: TextStyle(
@@ -248,6 +256,10 @@ class _FixerRegisterScreenState extends State<FixerRegisterScreen> {
                 ),
                 const SizedBox(height: 40),
 
+<<<<<<< HEAD
+=======
+                // Register Button
+>>>>>>> b6204569c36ca6ddad69002b8753ca10b451a41f
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(

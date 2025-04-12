@@ -23,7 +23,10 @@ class _JobFormState extends State<JobForm> {
   final _formKey = GlobalKey<FormState>();
   final JobService jobService = JobService();
   final TextEditingController _descriptionController = TextEditingController();
+<<<<<<< HEAD
   final TextEditingController _titleController = TextEditingController();
+=======
+>>>>>>> b6204569c36ca6ddad69002b8753ca10b451a41f
   double _price = 0.0;
 
   DateTimeRange? _jobDateRange;
@@ -107,6 +110,7 @@ class _JobFormState extends State<JobForm> {
           key: _formKey,
           child: ListView(
             children: [
+<<<<<<< HEAD
               const Text("Title", style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               TextFormField(
@@ -134,6 +138,8 @@ class _JobFormState extends State<JobForm> {
                     : null,
               ),
               const SizedBox(height: 16),
+=======
+>>>>>>> b6204569c36ca6ddad69002b8753ca10b451a41f
               TextFormField(
                 controller: _descriptionController,
                 maxLength: 120,
@@ -693,7 +699,10 @@ class _JobFormState extends State<JobForm> {
 
     final job = Job(
       id: widget.initialData?.id,
+<<<<<<< HEAD
       title: _titleController.text,
+=======
+>>>>>>> b6204569c36ca6ddad69002b8753ca10b451a41f
       desc: _descriptionController.text,
       price: _price.toInt(),
       jobDateRange: _jobDateRange!,
@@ -722,10 +731,13 @@ class _JobFormState extends State<JobForm> {
       Navigator.of(context).pop();
     }
   }
+<<<<<<< HEAD
     @override
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
     super.dispose();
   }
+=======
+>>>>>>> b6204569c36ca6ddad69002b8753ca10b451a41f
 }

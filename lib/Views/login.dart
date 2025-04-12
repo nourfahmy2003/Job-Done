@@ -16,6 +16,10 @@ class LoginScreen extends StatelessWidget {
 
     Future<void> _signIn() async {
       try {
+<<<<<<< HEAD
+=======
+        // Show loading indicator
+>>>>>>> b6204569c36ca6ddad69002b8753ca10b451a41f
         showDialog(
           context: context,
           barrierDismissible: false,
